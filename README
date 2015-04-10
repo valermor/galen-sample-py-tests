@@ -1,0 +1,7 @@
+This is a sample project to demonstrate the use of galenapi lib.
+
+It showcases:
+1 - galenapi reporting API
+2 - galenapi layout check API
+
+It takes almost entirely a previously existing example in the Galen framework GitHub repo.

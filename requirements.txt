@@ -1,0 +1,3 @@
+selenium
+nose2
+galenapi
