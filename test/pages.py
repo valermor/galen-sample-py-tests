@@ -14,15 +14,43 @@
 # limitations under the License.                                           #
 ############################################################################
 
-LAYOUT = "LAYOUT"
+TEST_APP_URL = "http://testapp.galenframework.com"
 
-def groups(*group_list):
-    """Decorator that adds group name to test method for use with the attributes (-A) plugin.
-    """
-    def wrap_ob(ob):
-        if len(group_list) == 1:
-            setattr(ob, "group", group_list[0])
-        elif len(group_list) > 1:
-            setattr(ob, "groups", group_list)
-        return ob
-    return wrap_ob
+
+class BasePage(object):
+    def __init__(self, driver):
+        self.driver = driver
+
+    def load(self):
+        pass
+
+    def for_screen_size(self, width, height):
+        self.driver.set_window_size(width, height)
+        return self
+
+
+class WelcomePage(BasePage):
+
+    def load(self):
+        self.driver.get(TEST_APP_URL)
+        return self
+
+    def navigate_to_login_page(self):
+        login_button = self.driver.find_element_by_css_selector(".button-login")
+        login_button.click()
+        return LoginPage(self.driver)
+
+
+class LoginPage(BasePage):
+
+    def load(self):
+        WelcomePage(self.driver).load().navigate_to_login_page()
+        return self
+
+
+def load_welcome_page(driver):
+    return WelcomePage(driver).load()
+
+
+def load_login_page(driver):
+    return LoginPage(driver).load()

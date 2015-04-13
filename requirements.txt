@@ -1,3 +1,5 @@
 selenium
 nose2
-galenapi
+galenpy
+wheel
+thrift

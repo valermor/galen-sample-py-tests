@@ -1,7 +1,15 @@
-This is a sample project to demonstrate the use of galenapi lib.
+Sample project to demonstrate the use of galenapi lib.
 
 It showcases:
-1 - galenapi reporting API
-2 - galenapi layout check API
+- galenapi reporting API
+- galenapi layout check API
 
-It takes almost entirely a previously existing example in the Galen framework GitHub repo.
+The examples are in test_galen_demo.py. They are based 100% on Galen Java API example at https://github.com/galenframework/galen-sample-java-tests.
+
+To run the example:
+
+1. Make sure you have python 2.7 and pip installed.
+2. Install requirements:
+    ./scripts/install_requirements.txt
+3. Run the tests:
+    ./scripts/run_layout_tests.sh
