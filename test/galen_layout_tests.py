@@ -16,11 +16,10 @@
 
 from nose2.tools import params
 
-from test.devices import device_provider
-
-from test.galen_test_base import GalenTestBase
-from test.groups import groups
-from test.pages import load_login_page, load_welcome_page
+from src.devices import device_provider
+from src.galen_test_base import GalenTestBase
+from src.groups import groups
+from src.pages import load_login_page, load_welcome_page
 
 
 class WelcomePageTest(GalenTestBase):

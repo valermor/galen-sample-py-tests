@@ -3,3 +3,4 @@ nose2
 galenpy
 wheel
 thrift
+pyhamcrest

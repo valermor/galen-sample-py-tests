@@ -18,7 +18,7 @@ import os
 import unittest
 from galenpy.galen_api import Galen
 from galenpy.galen_report import TestReport, info_node, warn_node, error_node
-from galenpy.galen_webdriver import GalenWebDriver
+from galenpy.galen_webdriver import GalenRemoteWebDriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 PROJECT_NAME = 'galen-sample-py-tests'
@@ -26,7 +26,7 @@ PROJECT_NAME = 'galen-sample-py-tests'
 
 class GalenTestBase(unittest.TestCase):
     def setUp(self):
-        self.driver = GalenWebDriver("http://localhost:4444/wd/hub", desired_capabilities=DesiredCapabilities.FIREFOX)
+        self.driver = GalenRemoteWebDriver("http://localhost:4444/wd/hub", desired_capabilities=DesiredCapabilities.CHROME)
 
     def tearDown(self):
         if self.driver:
