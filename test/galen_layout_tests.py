@@ -22,7 +22,7 @@ from src.groups import groups
 from src.pages import load_login_page, load_welcome_page
 
 
-class WelcomePageTest(GalenTestBase):
+class DemoPageTest(GalenTestBase):
 
     @groups("LAYOUT")
     @params(*device_provider)
@@ -30,7 +30,7 @@ class WelcomePageTest(GalenTestBase):
 
         load_welcome_page(self.driver).for_screen_size(device.width, device.height)
 
-        self.check_layout("welcome page", "welcomePage.spec", device.included_tags, device.excluded_tags)
+        self.check_layout("welcome page for device " + device.name, "welcomePage.spec", device.included_tags, device.excluded_tags)
 
     @groups("LAYOUT")
     @params(*device_provider)
@@ -38,5 +38,5 @@ class WelcomePageTest(GalenTestBase):
 
         load_login_page(self.driver).for_screen_size(device.width, device.height)
 
-        self.check_layout("login page", "loginPage.spec", device.included_tags, device.excluded_tags)
+        self.check_layout("login page for device " + device.name, "loginPage.spec", device.included_tags, device.excluded_tags)
 

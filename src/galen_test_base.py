@@ -21,8 +21,6 @@ from galenpy.galen_report import TestReport, info_node, warn_node, error_node
 from galenpy.galen_webdriver import GalenRemoteWebDriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-PROJECT_NAME = 'galen-sample-py-tests'
-
 
 class GalenTestBase(unittest.TestCase):
     def setUp(self):
@@ -34,9 +32,9 @@ class GalenTestBase(unittest.TestCase):
 
     def check_layout(self, test_name, specs, included_tags, excluded_tags):
         try:
+            parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__) + '/..'))
             test_report = TestReport(test_name)
-            check_layout_report = Galen().check_layout(self.driver,
-                                                       os.path.join(os.path.dirname(__file__) + "/" + "specs/" + specs),
+            check_layout_report = Galen().check_layout(self.driver, os.path.join(parent_dir, "test", "specs", specs),
                                                        included_tags, excluded_tags)
 
             test_report.add_report_node(info_node("Running layout check for: " + test_name)

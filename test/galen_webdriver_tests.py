@@ -1,10 +1,10 @@
 ############################################################################
 # Copyright 2015 Valerio Morsella                                          #
-#                                                                          #
+# #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
 # you may not use this file except in compliance with the License.         #
 # You may obtain a copy of the License at                                  #
-#                                                                          #
+# #
 #    http://www.apache.org/licenses/LICENSE-2.0                            #
 #                                                                          #
 # Unless required by applicable law or agreed to in writing, software      #
@@ -13,26 +13,31 @@
 # See the License for the specific language governing permissions and      #
 # limitations under the License.                                           #
 ############################################################################
+import os
 import unittest
 
 from galenpy.galen_webdriver import GalenRemoteWebDriver
-from hamcrest import assert_that, has_entry, equal_to, contains_string, has_item, greater_than, less_than
+from hamcrest import assert_that, has_entry, equal_to, contains_string, has_item, less_than, calling, \
+    raises
 from hamcrest.core.helpers.hasmethod import hasmethod
 from hamcrest.core.helpers.wrap_matcher import wrap_matcher
 from hamcrest.library.collection.isdict_containing import IsDictContaining
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver import DesiredCapabilities
-from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.remote import webdriver
 from selenium.webdriver.remote.webelement import WebElement
+
 from src.groups import groups
 
 
 class GalenWebDriverTest(unittest.TestCase):
-
     def setUp(self):
-        self.driver = GalenRemoteWebDriver("http://localhost:4444/wd/hub", desired_capabilities=DesiredCapabilities.CHROME)
+        self.driver = GalenRemoteWebDriver(remote_url=os.getenv('GRID_URL', 'http://127.0.0.1:4444/wd/hub'),
+                                           desired_capabilities=DesiredCapabilities.CHROME)
 
     def tearDown(self):
-        self.driver.quit()
+        if self.driver:
+            self.driver.quit()
 
     @groups("WEBDRIVER")
     def test_can_get_capabilities(self):
@@ -41,7 +46,8 @@ class GalenWebDriverTest(unittest.TestCase):
         """
         caps = self.driver.capabilities
         assert_that(caps, has_entry('platform', 'MAC'), 'should contain a string element')
-        assert_that(caps, has_entry('webdriver.remote.sessionid', self.driver.session_id), 'should contain a string element')
+        assert_that(caps, has_entry('webdriver.remote.sessionid', self.driver.session_id),
+                    'should contain a string element')
         assert_that(caps, has_entry('browserName', 'chrome'), 'should contain a string element')
         assert_that(caps, has_entry('nativeEvents', True), 'should contain a bool element')
         assert_that(caps, has_entry('takesScreenshot', True), 'should contain a bool element')
@@ -101,29 +107,40 @@ class GalenWebDriverTest(unittest.TestCase):
         self.driver.maximize_window()
         size_after = self.driver.get_window_size()
         assert_that(int(size_before['width']), less_than(int(size_after['width'])),
-                    "screen width should be higher after resizing")
+                    "screen width should be bigger after resizing")
         assert_that(int(size_before['height']), less_than(int(size_after['height'])),
-                    "screen heigth should be higher after resizing")
+                    "screen height should be bigger after resizing")
 
+    @groups("WEBDRIVER")
     def test_can_refresh(self):
         self.load_test_page()
         self.driver.refresh()
         assert_that(self.driver.current_url, equal_to('http://testapp.galenframework.com/'))
 
+    @groups("WEBDRIVER")
     def test_can_get_cookie(self):
         self.load_test_page()
         self.driver.execute_script("document.cookie='acookie=thecookie'")
         cookie_name = self.driver.get_cookie('acookie')
         assert_that(cookie_name['value'], equal_to('thecookie'))
 
+    @unittest.skip('Issue #3 GalenWebDriver commands containing optional *args not correctly handled')
+    @groups("WEBDRIVER")
     def test_can_set_script_timeout(self):
-        pass
+        self.load_test_page()
+        self.driver.set_script_timeout(0)
+        self.driver.execute_async_script('document.cookie')
 
     def test_can_set_page_load_timeout(self):
         pass
 
     def test_can_set_window_size(self):
-        pass
+        self.load_test_page()
+        self.driver.set_window_size(400, 500)
+        size = self.driver.get_window_size()
+        assert_that(size['width'], equal_to(400), 'should have the width value set on resizing')
+        assert_that(size['height'], equal_to(500), 'should have the height value set on resizing')
+
 
     def test_can_set_window_position(self):
         pass
@@ -143,12 +160,26 @@ class GalenWebDriverTest(unittest.TestCase):
     def test_can_get_log_type(self):
         pass
 
+    @unittest.skip('Need a proper fix to package unhandled error from Remote WebDriver to exception class')
+    @groups("WEBDRIVER")
+    def test_can_manage_unhandled_exception(self):
+        self.driver.set_script_timeout(0)
+        assert_that(calling(failing_call(self.driver)), raises(WebDriverException))
+
+    @groups("WEBDRIVER")
+    def test_can_raise_no_such_element_exception(self):
+        self.load_test_page()
+        self.driver.find_element_by_xpath("anonexistinglocator")
+
     def load_test_page(self):
         self.driver.get('http://testapp.galenframework.com')
 
 
-class IsDictContainingDictValue(IsDictContaining):
+def failing_call(a_driver):
+    a_driver.execute_async_script('document.cookie')
 
+
+class IsDictContainingDictValue(IsDictContaining):
     def __init__(self, key_matcher):
         IsDictContaining.__init__(self, key_matcher, "")
 
@@ -160,14 +191,9 @@ class IsDictContainingDictValue(IsDictContaining):
         return False
 
     def describe_to(self, description):
-        description.append_text('a dictionary containing a dict value with key:')        \
-                    .append_description_of(self.key_matcher)        \
+        description.append_text('a dictionary containing a dict value with key:').append_description_of(
+            self.key_matcher)
+
 
 def has_entry_containing_dict_with_key(key_match):
     return IsDictContainingDictValue(wrap_matcher(key_match))
-
-if __name__ == '__main__':
-    driver = WebDriver("http://localhost:4444/wd/hub", desired_capabilities=DesiredCapabilities.CHROME)
-    driver.get('http://testapp.galenframework.com')
-    driver.maximize_window()
-    print ''
