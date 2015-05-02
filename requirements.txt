@@ -4,3 +4,4 @@ galenpy
 wheel
 thrift
 pyhamcrest
+requests

@@ -24,7 +24,6 @@ from hamcrest.core.helpers.wrap_matcher import wrap_matcher
 from hamcrest.library.collection.isdict_containing import IsDictContaining
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver import DesiredCapabilities
-from selenium.webdriver.remote import webdriver
 from selenium.webdriver.remote.webelement import WebElement
 
 from src.groups import groups
@@ -45,7 +44,7 @@ class GalenWebDriverTest(unittest.TestCase):
         Checks that GalenRemoteWebDriver can receive capabilities with right type.
         """
         caps = self.driver.capabilities
-        assert_that(caps, has_entry('platform', 'MAC'), 'should contain a string element')
+        assert_that(caps, has_entry('platform', 'LINUX'), 'should contain a string element')
         assert_that(caps, has_entry('webdriver.remote.sessionid', self.driver.session_id),
                     'should contain a string element')
         assert_that(caps, has_entry('browserName', 'chrome'), 'should contain a string element')
