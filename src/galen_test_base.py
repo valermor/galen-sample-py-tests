@@ -23,6 +23,10 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
 class GalenTestBase(unittest.TestCase):
+
+    def __init__(self, methodName='runTest'):
+        super(GalenTestBase, self).__init__(methodName)
+
     def setUp(self):
         self.driver = GalenRemoteWebDriver("http://localhost:4444/wd/hub", desired_capabilities=DesiredCapabilities.CHROME)
 

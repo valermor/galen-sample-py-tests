@@ -9,5 +9,5 @@ fi
 echo "rm -rf ./target"
 rm -rf ./target
 
-echo "nose2 --plugin nose2.plugins.junitxml --plugin nose2.plugins.mp -c nose2.cfg -N 3 -A group=WEBDRIVER   --log-level debug"
+echo "nose2 --plugin nose2.plugins.junitxml --plugin nose2.plugins.mp -c nose2.cfg -N 3 -A group=WEBDRIVER   --log-level debug ${@}"
 nose2 --plugin nose2.plugins.junitxml --plugin nose2.plugins.mp -c nose2.cfg -N 3 -A group=WEBDRIVER --log-level debug "$@"

@@ -30,6 +30,11 @@ from src.groups import groups
 
 
 class GalenWebDriverTest(unittest.TestCase):
+
+    def __init__(self, methodName='runTest'):
+        super(GalenWebDriverTest, self).__init__(methodName)
+        self.driver = None
+
     def setUp(self):
         self.driver = GalenRemoteWebDriver(remote_url=os.getenv('GRID_URL', 'http://127.0.0.1:4444/wd/hub'),
                                            desired_capabilities=DesiredCapabilities.CHROME)
