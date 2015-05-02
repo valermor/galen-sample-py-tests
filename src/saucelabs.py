@@ -16,8 +16,8 @@ class SauceLabsTestConfig():
     This class exposes all the primitives needed to configure saucelabs test runs.
     """
 
-    def __init__(self, grid_url):
-        self.grid_url = grid_url
+    def __init__(self):
+        self.grid_url = "https://saucelabs.com/"
         self.session_id = None
 
     def start(self, testcase):
@@ -62,17 +62,28 @@ class SaucelabsPlugin(Plugin):
     commandLineSwitch = (None, 'saucelabs', 'Sends test configuration info to Saucelabs')
 
     def __init__(self):
-        self.config = SauceLabsTestConfig(os.getenv('GRID_URL'))
+        self.config = SauceLabsTestConfig()
+        self.outcome = None
 
-    def startTest(self, event):
-        self.config.start(str(event.test))
+    def stopTest(self, event):
+        """
+        Report test on stop as hooks does not separate setUp from actual test. Driver is None on calling setUp().
+        """
+        self.config.start(event.test)
+        if self.outcome == 'success':
+            self.config.success()
+        elif self.outcome == 'failure':
+            self.config.fail()
+        elif self.outcome == 'error':
+            self.config.fail()
 
     def reportSuccess(self, event):
-        self.config.success()
+        self.outcome = 'success'
+
 
     def reportFailure(self, event):
-        self.config.fail()
+        self.outcome = 'failure'
 
     def reportError(self, event):
-        self.config.fail()
+        self.outcome = 'error'
 
