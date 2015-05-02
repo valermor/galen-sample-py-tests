@@ -1,8 +1,23 @@
+############################################################################
+# Copyright 2015 Valerio Morsella                                          #
+#                                                                          #
+# Licensed under the Apache License, Version 2.0 (the "License");          #
+# you may not use this file except in compliance with the License.         #
+# You may obtain a copy of the License at                                  #
+#                                                                          #
+#    http://www.apache.org/licenses/LICENSE-2.0                            #
+#                                                                          #
+# Unless required by applicable law or agreed to in writing, software      #
+# distributed under the License is distributed on an "AS IS" BASIS,        #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
+# See the License for the specific language governing permissions and      #
+# limitations under the License.                                           #
+############################################################################
+
 import base64
 import json
-import os
-
-from nose2.events import Plugin
+import unittest
+import sys
 
 import requests
 
@@ -54,36 +69,90 @@ class SauceLabsTestConfig():
         return request.status_code == requests.codes.ok
 
 
-class SaucelabsPlugin(Plugin):
+class SkipTest(Exception):
     """
-    Report into Saucelabs details about execution of tests.
-    """
-    configSection = 'saucelabs'
-    commandLineSwitch = (None, 'saucelabs', 'Sends test configuration info to Saucelabs')
+    Raise this exception in a test to skip it.
 
-    def __init__(self):
+    Usually you can use TestCase.skipTest() or one of the skipping decorators
+    instead of raising this directly.
+    """
+    pass
+
+
+class SaucelabsReportingTestCase(unittest.TestCase):
+
+    def __init__(self, methodName='runTest'):
+        super(SaucelabsReportingTestCase, self).__init__(methodName)
+        self.driver = None
         self.config = SauceLabsTestConfig()
-        self.outcome = None
 
-    def stopTest(self, event):
-        """
-        Report test on stop as hooks does not separate setUp from actual test. Driver is None on calling setUp().
-        """
-        self.config.start(event.test)
-        if self.outcome == 'success':
-            self.config.success()
-        elif self.outcome == 'failure':
-            self.config.fail()
-        elif self.outcome == 'error':
-            self.config.fail()
+    def set_driver(self, driver):
+        self.driver = driver
 
-    def reportSuccess(self, event):
-        self.outcome = 'success'
+    def run(self, result=None):
+        orig_result = result
+        if result is None:
+            result = self.defaultTestResult()
+            startTestRun = getattr(result, 'startTestRun', None)
+            if startTestRun is not None:
+                startTestRun()
 
+        self._resultForDoCleanups = result
+        result.startTest(self)
 
-    def reportFailure(self, event):
-        self.outcome = 'failure'
+        testMethod = getattr(self, self._testMethodName)
+        if (getattr(self.__class__, "__unittest_skip__", False) or
+            getattr(testMethod, "__unittest_skip__", False)):
+            # If the class or method was skipped.
+            try:
+                skip_why = (getattr(self.__class__, '__unittest_skip_why__', '')
+                            or getattr(testMethod, '__unittest_skip_why__', ''))
+                self._addSkip(result, skip_why)
+            finally:
+                result.stopTest(self)
+            return
+        try:
+            success = False
+            try:
+                self.setUp()
+            except SkipTest as e:
+                self._addSkip(result, str(e))
+            except KeyboardInterrupt:
+                raise
+            except:
+                result.addError(self, sys.exc_info())
+            else:
+                try:
+                    self.config.start(self)
+                    testMethod()
+                except KeyboardInterrupt:
+                    raise
+                except self.failureException:
+                    result.addFailure(self, sys.exc_info())
+                    self.config.fail()
+                except SkipTest as e:
+                    self._addSkip(result, str(e))
+                except:
+                    result.addError(self, sys.exc_info())
+                    self.config.fail()
+                else:
+                    success = True
+                try:
+                    self.tearDown()
+                except KeyboardInterrupt:
+                    raise
+                except:
+                    result.addError(self, sys.exc_info())
+                    success = False
 
-    def reportError(self, event):
-        self.outcome = 'error'
-
+            cleanUpSuccess = self.doCleanups()
+            success = success and cleanUpSuccess
+            if success:
+                result.addSuccess(self)
+                self.config.success()
+        finally:
+            result.stopTest(self)
+            if orig_result is None:
+                stopTestRun = getattr(result, 'stopTestRun', None)
+                if stopTestRun is not None:
+                    stopTestRun()

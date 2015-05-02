@@ -18,7 +18,7 @@ import unittest
 
 from galenpy.galen_webdriver import GalenRemoteWebDriver
 from hamcrest import assert_that, has_entry, equal_to, contains_string, has_item, less_than, calling, \
-    raises
+    raises, greater_than
 from hamcrest.core.helpers.hasmethod import hasmethod
 from hamcrest.core.helpers.wrap_matcher import wrap_matcher
 from hamcrest.library.collection.isdict_containing import IsDictContaining
@@ -27,17 +27,17 @@ from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.remote.webelement import WebElement
 
 from src.groups import groups
+from src.saucelabs import SaucelabsReportingTestCase
 
 
-class GalenWebDriverTest(unittest.TestCase):
+class GalenWebDriverTest(SaucelabsReportingTestCase):
 
     def __init__(self, methodName='runTest'):
         super(GalenWebDriverTest, self).__init__(methodName)
-        self.driver = None
 
     def setUp(self):
-        self.driver = GalenRemoteWebDriver(remote_url=os.getenv('GRID_URL', 'http://127.0.0.1:4444/wd/hub'),
-                                           desired_capabilities=DesiredCapabilities.CHROME)
+        self.set_driver(GalenRemoteWebDriver(remote_url=os.getenv('GRID_URL', 'http://127.0.0.1:4444/wd/hub'),
+                                           desired_capabilities=DesiredCapabilities.CHROME))
 
     def tearDown(self):
         if self.driver:
@@ -108,11 +108,11 @@ class GalenWebDriverTest(unittest.TestCase):
     def test_can_maximize_window(self):
         self.load_test_page()
         size_before = self.driver.get_window_size()
-        self.driver.maximize_window()
+        self.driver.set_window_size(375, 667)
         size_after = self.driver.get_window_size()
-        assert_that(int(size_before['width']), less_than(int(size_after['width'])),
+        assert_that(int(size_before['width']), greater_than(int(size_after['width'])),
                     "screen width should be bigger after resizing")
-        assert_that(int(size_before['height']), less_than(int(size_after['height'])),
+        assert_that(int(size_before['height']), greater_than    (int(size_after['height'])),
                     "screen height should be bigger after resizing")
 
     @groups("WEBDRIVER")
