@@ -17,14 +17,14 @@ import os
 import unittest
 
 from galenpy.galen_webdriver import GalenRemoteWebDriver
-from hamcrest import assert_that, has_entry, equal_to, contains_string, has_item, less_than, calling, \
-    raises, greater_than
+from hamcrest import assert_that, has_entry, equal_to, contains_string, has_item, less_than, calling, raises
 from hamcrest.core.helpers.hasmethod import hasmethod
 from hamcrest.core.helpers.wrap_matcher import wrap_matcher
 from hamcrest.library.collection.isdict_containing import IsDictContaining
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support.wait import WebDriverWait
 
 from src.groups import groups
 from src.saucelabs import SaucelabsReportingTestCase
@@ -37,7 +37,7 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
 
     def setUp(self):
         self.set_driver(GalenRemoteWebDriver(remote_url=os.getenv('GRID_URL', 'http://127.0.0.1:4444/wd/hub'),
-                                           desired_capabilities=DesiredCapabilities.CHROME))
+                                           desired_capabilities=DesiredCapabilities.FIREFOX))
 
     def tearDown(self):
         if self.driver:
@@ -106,13 +106,17 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
 
     @groups("WEBDRIVER")
     def test_can_maximize_window(self):
+        wait = WebDriverWait(self.driver, 25)
         self.load_test_page()
-        size_before = self.driver.get_window_size()
         self.driver.set_window_size(375, 667)
+        wait.until(lambda x: windows_size_is(x, 375, 667), message="windows size should be 375x667")
+        size_before = self.driver.get_window_size()
+        self.driver.maximize_window()
+        wait.until(lambda x: windows_size_greater_than(x, 375, 667), message="windows size should be greater 375x667")
         size_after = self.driver.get_window_size()
-        assert_that(int(size_before['width']), greater_than(int(size_after['width'])),
+        assert_that(int(size_before['width']), less_than(int(size_after['width'])),
                     "screen width should be bigger after resizing")
-        assert_that(int(size_before['height']), greater_than    (int(size_after['height'])),
+        assert_that(int(size_before['height']), less_than(int(size_after['height'])),
                     "screen height should be bigger after resizing")
 
     @groups("WEBDRIVER")
@@ -138,12 +142,15 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
     def test_can_set_page_load_timeout(self):
         pass
 
+    @groups("WEBDRIVER")
     def test_can_set_window_size(self):
         self.load_test_page()
-        self.driver.set_window_size(400, 500)
+        self.driver.set_window_size(400, 1000)
+        wait = WebDriverWait(self.driver, 30, 3)
+        wait.until(lambda x: windows_size_is(x, 400, 1000), message="windows size should be 400x500")
         size = self.driver.get_window_size()
-        assert_that(size['width'], equal_to(400), 'should have the width value set on resizing')
-        assert_that(size['height'], equal_to(500), 'should have the height value set on resizing')
+        assert_that(size['width'], equal_to(400), 'should have width set to 400')
+        assert_that(size['height'], equal_to(1000), 'should have height set to 500')
 
 
     def test_can_set_window_position(self):
@@ -177,6 +184,15 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
 
     def load_test_page(self):
         self.driver.get('http://testapp.galenframework.com')
+
+
+def windows_size_is(driver, width, height):
+    size = driver.get_window_size()
+    return size['width'] == width and size['height'] == height
+
+def windows_size_greater_than(driver, width, height):
+    size = driver.get_window_size()
+    return size['width'] > width and size['height'] > height
 
 
 def failing_call(a_driver):
