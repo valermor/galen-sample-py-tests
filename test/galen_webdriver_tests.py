@@ -29,6 +29,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from src.groups import groups
 from src.saucelabs import SaucelabsReportingTestCase
 
+DESIRED_CAPS = DesiredCapabilities.FIREFOX
 
 class GalenWebDriverTest(SaucelabsReportingTestCase):
 
@@ -37,7 +38,7 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
 
     def setUp(self):
         self.set_driver(GalenRemoteWebDriver(remote_url=os.getenv('GRID_URL', 'http://127.0.0.1:4444/wd/hub'),
-                                           desired_capabilities=DesiredCapabilities.FIREFOX))
+                                           desired_capabilities=DESIRED_CAPS))
 
     def tearDown(self):
         if self.driver:
@@ -52,7 +53,7 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
         assert_that(caps, has_entry('platform', 'LINUX'), 'should contain a string element')
         assert_that(caps, has_entry('webdriver.remote.sessionid', self.driver.session_id),
                     'should contain a string element')
-        assert_that(caps, has_entry('browserName', 'chrome'), 'should contain a string element')
+        assert_that(caps, has_entry('browserName', DESIRED_CAPS['browserName']), 'should contain a string element')
         assert_that(caps, has_entry('nativeEvents', True), 'should contain a bool element')
         assert_that(caps, has_entry('takesScreenshot', True), 'should contain a bool element')
         assert_that(caps, has_entry_containing_dict_with_key('chrome'), 'should contain a dict element')
