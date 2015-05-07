@@ -21,7 +21,7 @@ from hamcrest import assert_that, has_entry, equal_to, contains_string, has_item
 from hamcrest.core.helpers.hasmethod import hasmethod
 from hamcrest.core.helpers.wrap_matcher import wrap_matcher
 from hamcrest.library.collection.isdict_containing import IsDictContaining
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, NoSuchElementException
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
@@ -29,16 +29,17 @@ from selenium.webdriver.support.wait import WebDriverWait
 from src.groups import groups
 from src.saucelabs import SaucelabsReportingTestCase
 
+
 DESIRED_CAPS = DesiredCapabilities.FIREFOX
 
-class GalenWebDriverTest(SaucelabsReportingTestCase):
 
+class GalenWebDriverTest(SaucelabsReportingTestCase):
     def __init__(self, methodName='runTest'):
         super(GalenWebDriverTest, self).__init__(methodName)
 
     def setUp(self):
         self.set_driver(GalenRemoteWebDriver(remote_url=os.getenv('GRID_URL', 'http://127.0.0.1:4444/wd/hub'),
-                                           desired_capabilities=DESIRED_CAPS))
+                                             desired_capabilities=DESIRED_CAPS))
 
     def tearDown(self):
         if self.driver:
@@ -54,9 +55,8 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
         assert_that(caps, has_entry('webdriver.remote.sessionid', self.driver.session_id),
                     'should contain a string element')
         assert_that(caps, has_entry('browserName', DESIRED_CAPS['browserName']), 'should contain a string element')
-        assert_that(caps, has_entry('nativeEvents', True), 'should contain a bool element')
+        assert_that(caps, has_entry('javascriptEnabled', True), 'should contain a bool element')
         assert_that(caps, has_entry('takesScreenshot', True), 'should contain a bool element')
-        assert_that(caps, has_entry_containing_dict_with_key('chrome'), 'should contain a dict element')
 
     @groups("WEBDRIVER")
     def test_can_get_title(self):
@@ -140,6 +140,7 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
         self.driver.set_script_timeout(0)
         self.driver.execute_async_script('document.cookie')
 
+    @unittest.skip('To be implemented')
     def test_can_set_page_load_timeout(self):
         pass
 
@@ -153,22 +154,27 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
         assert_that(size['width'], equal_to(400), 'should have width set to 400')
         assert_that(size['height'], equal_to(1000), 'should have height set to 500')
 
-
+    @unittest.skip('To be implemented')
     def test_can_set_window_position(self):
         pass
 
+    @unittest.skip('To be implemented')
     def test_can_get_window_position(self):
         pass
 
+    @unittest.skip('To be implemented')
     def test_can_get_orientation(self):
         pass
 
+    @unittest.skip('To be implemented')
     def test_can_set_orientation(self):
         pass
 
+    @unittest.skip('To be implemented')
     def test_can_get_log_types(self):
         pass
 
+    @unittest.skip('To be implemented')
     def test_can_get_log_type(self):
         pass
 
@@ -178,10 +184,12 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
         self.driver.set_script_timeout(0)
         assert_that(calling(failing_call(self.driver)), raises(WebDriverException))
 
+    # @unittest.skip('Need fix for issue #1')
     @groups("WEBDRIVER")
     def test_can_raise_no_such_element_exception(self):
         self.load_test_page()
-        self.driver.find_element_by_xpath("anonexistinglocator")
+        assert_that(calling(self.driver.find_element_by_xpath).with_args('anonexistinglocator'),
+                    raises(NoSuchElementException), 'should raise NoSuchElementException')
 
     def load_test_page(self):
         self.driver.get('http://testapp.galenframework.com')
@@ -190,6 +198,7 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
 def windows_size_is(driver, width, height):
     size = driver.get_window_size()
     return size['width'] == width and size['height'] == height
+
 
 def windows_size_greater_than(driver, width, height):
     size = driver.get_window_size()
