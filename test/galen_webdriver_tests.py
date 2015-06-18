@@ -30,7 +30,10 @@ from src.groups import groups
 from src.saucelabs import SaucelabsReportingTestCase
 
 
-DESIRED_CAPS = DesiredCapabilities.FIREFOX
+capabilities = DesiredCapabilities.FIREFOX.copy()
+capabilities['version'] = "33.1"
+
+DESIRED_CAPS = capabilities
 
 
 class GalenWebDriverTest(SaucelabsReportingTestCase):
@@ -138,7 +141,7 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
     def test_can_set_script_timeout(self):
         self.load_test_page()
         self.driver.set_script_timeout(0)
-        self.driver.execute_async_script('document.cookie')
+        self.driver.execute_async_script('return document.cookie')
 
     @unittest.skip('To be implemented')
     def test_can_set_page_load_timeout(self):
@@ -182,7 +185,7 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
     @groups("WEBDRIVER")
     def test_can_manage_unhandled_exception(self):
         self.driver.set_script_timeout(0)
-        assert_that(calling(failing_call(self.driver)), raises(WebDriverException))
+        assert_that(calling(failing_call).with_args(self.driver), raises(WebDriverException))
 
     # @unittest.skip('Need fix for issue #1')
     @groups("WEBDRIVER")
@@ -206,7 +209,7 @@ def windows_size_greater_than(driver, width, height):
 
 
 def failing_call(a_driver):
-    a_driver.execute_async_script('document.cookie')
+    a_driver.execute_async_script('return document.cookie')
 
 
 class IsDictContainingDictValue(IsDictContaining):
