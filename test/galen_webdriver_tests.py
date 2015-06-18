@@ -30,10 +30,7 @@ from src.groups import groups
 from src.saucelabs import SaucelabsReportingTestCase
 
 
-capabilities = DesiredCapabilities.FIREFOX.copy()
-capabilities['version'] = "33.1"
-
-DESIRED_CAPS = capabilities
+DESIRED_CAPS = DesiredCapabilities.FIREFOX.copy()
 
 
 class GalenWebDriverTest(SaucelabsReportingTestCase):
@@ -152,10 +149,10 @@ class GalenWebDriverTest(SaucelabsReportingTestCase):
         self.load_test_page()
         self.driver.set_window_size(400, 1000)
         wait = WebDriverWait(self.driver, 30, 3)
-        wait.until(lambda x: windows_size_is(x, 400, 1000), message="windows size should be 400x500")
+        wait.until(lambda x: windows_size_is(x, 400, 1000), message="windows size should be 400x1000")
         size = self.driver.get_window_size()
         assert_that(size['width'], equal_to(400), 'should have width set to 400')
-        assert_that(size['height'], equal_to(1000), 'should have height set to 500')
+        assert_that(size['height'], equal_to(1000), 'should have height set to 1000')
 
     @unittest.skip('To be implemented')
     def test_can_set_window_position(self):
